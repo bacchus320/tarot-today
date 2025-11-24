@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+  />
+  <title>오늘의 타로 운세</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#111322" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="타로 오늘의 운세" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo","Noto Sans KR", sans-serif;
+      background: radial-gradient(circle at top, #3f51b5, #111);
+      color: #f9f9ff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .app {
+      max-width: 520px;
+      width: 100%;
+      background: rgba(10, 10, 30, 0.9);
+      border-radius: 24px;
+      padding: 20px 18px 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+    .app-header { text-align: center; margin-bottom: 16px; }
+    .title {
+      font-size: 1.3rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: #b3c6ff;
+    }
+    .subtitle { font-size: 0.92rem; margin-top: 4px; color: #d0d4ff; opacity: 0.9; }
+    .date-text { margin-top: 8px; font-size: 0.8rem; opacity: 0.8; }
+    .section-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(120,144,156,0.3); }
+    .section-heading {
+      font-size: 0.9rem; font-weight: 600; color: #c5cae9;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .badge {
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+      border: 1px solid rgba(187,222,251,0.7); color: #bbdefb;
+    }
+    .card-area { display: flex; flex-direction: column; align-items: center; margin: 8px 0 10px; }
+    .tarot-card {
+      width: 180px; height: 280px; border-radius: 16px;
+      background: radial-gradient(circle at top, #2c2f5e, #0c0f24);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      padding: 14px; display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; transform-style: preserve-3d;
+      transition: transform 0.4s ease, background 0.3s ease; overflow: hidden;
+    }
+    .tarot-card.flipped { transform: rotateX(180deg); }
+    .tarot-card::before {
+      content: "✶"; position: absolute; top: 8px; right: 10px;
+      font-size: 0.9rem; opacity: 0.7;
+    }
+    .card-top-label {
+      font-size: 0.75rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: #c5cae9; opacity: 0.85;
+    }
+    .card-name { margin-top: 12px; font-size: 1.1rem; font-weight: 700; line-height: 1.3; }
+    .card-orientation { margin-top: 6px; font-size: 0.8rem; opacity: 0.9; }
+    .card-keyword { margin-top: 12px; font-size: 0.85rem; font-weight: 600; color: #ffeb3b; }
+    .card-bottom-label { font-size: 0.75rem; text-align: right; opacity: 0.7; }
+    .tag {
+      display: inline-block; font-size: 0.75rem; padding: 4px 8px; border-radius: 999px;
+      border: 1px solid rgba(187,222,251,0.5); color: #bbdefb; margin-top: 10px;
+    }
+    .sections { margin-top: 10px; }
+    .section { margin-bottom: 8px; }
+    .section-title { font-size: 0.85rem; font-weight: 600; color: #c5cae9; margin-bottom: 2px; }
+    .section-body { font-size: 0.85rem; line-height: 1.4; color: #e8eaf6; opacity: 0.95; }
+    .hint { font-size: 0.8rem; margin-top: 4px; color: #9fa8da; opacity: 0.9; }
+    .btn-area { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      border: none; border-radius: 999px; padding: 10px 14px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; flex: 1;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7986cb, #536dfe);
+      color: #fff; box-shadow: 0 4px 14px rgba(83,109,254,0.5);
+    }
+    .btn-primary:active { transform: translateY(1px) scale(0.99); box-shadow: 0 2px 6px rgba(83,109,254,0.4); }
+    .btn-secondary {
+      background: transparent; color: #c5cae9; border: 1px solid rgba(197,202,233,0.5);
+    }
+    .btn-secondary:active { transform: translateY(1px) scale(0.99); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.04); color: #bbdefb;
+      border: 1px dashed rgba(187,222,251,0.6);
+    }
+    .footer { margin-top: 10px; text-align: center; font-size: 0.72rem; color: #9fa8da; opacity: 0.8; }
+    .spread-cards {
+      display: flex; gap: 8px; justify-content: space-between; margin-top: 6px; flex-wrap: wrap;
+    }
+    .spread-card-wrapper { flex: 1; min-width: 95px; }
+    .spread-card-label { font-size: 0.75rem; text-align: center; margin-bottom: 4px; color: #c5cae9; opacity: 0.9; }
+    .spread-card {
+      width: 100%; height: 170px; border-radius: 12px; padding: 8px;
+      background: linear-gradient(145deg, #1d2340, #283593);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      position: relative; font-size: 0.78rem;
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform 0.25s ease; overflow: hidden;
+    }
+    .spread-card.flipped { transform: rotateY(180deg); }
+    .spread-card-name { font-weight: 600; line-height: 1.25; }
+    .spread-card-orientation { font-size: 0.73rem; opacity: 0.9; margin-top: 4px; }
+    .spread-card-keyword { font-size: 0.75rem; margin-top: 6px; color: #ffeb3b; font-weight: 500; }
+    .spread-card::before {
+      content: "✦"; position: absolute; top: 6px; right: 8px; font-size: 0.8rem; opacity: 0.7;
+    }
+    .spread-meaning { margin-top: 8px; font-size: 0.8rem; line-height: 1.4; color: #e8eaf6; opacity: 0.95; }
+    @media (max-width: 380px) {
+      .tarot-card { width: 160px; height: 250px; }
+      .spread-card { height: 160px; font-size: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="title">오늘의 타로 운세</div>
+      <div class="subtitle">한 장으로 가볍게, 3장으로 깊게 🔮</div>
+      <div class="date-text" id="todayText"></div>
+    </header>
+
+    <main>
+      <section class="section-block">
+        <div class="section-heading">
+          <span>오늘의 한 장</span>
+          <span class="badge">하루 1회 고정</span>
+        </div>
+
+        <div class="card-area">
+          <div class="tarot-card" id="tarotCard">
+            <div>
+              <div class="card-top-label">TODAY'S TAROT</div>
+              <div class="card-name" id="cardName">아직 카드를 뽑지 않았어요</div>
+              <div class="card-orientation" id="cardOrientation">버튼을 눌러 오늘의 카드를 뽑아보세요.</div>
+              <div class="card-keyword" id="cardKeyword"></div>
+            </div>
+            <div class="card-bottom-label">하루 1회 추천</div>
+          </div>
+          <span class="tag" id="cardTag">가볍게 즐기는 운세</span>
+        </div>
+
+        <div class="sections" id="sections">
+          <div class="section">
+            <div class="section-title">오늘의 한 줄 조언</div>
+            <div class="section-body" id="adviceText">
+              카드를 뽑아서 오늘의 메시지를 받아보세요.
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">전체 운</div>
+            <div class="section-body" id="overallText">
+              오늘의 카드가 정해지면 전반적인 흐름을 알려드립니다.
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">사랑 · 관계 운</div>
+            <div class="section-body" id="loveText">
+              인간관계, 연애, 가족, 동료와의 관계 흐름을 체크해보세요.
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">일 · 금전 운</div>
+            <div class="section-body" id="workText">
+              일, 금전, 계획과 관련된 메시지를 확인할 수 있습니다.
+            </div>
+          </div>
+        </div>
+
+        <p class="hint">
+          ※ 이 타로는 엔터테인먼트용입니다. 중요한 결정은 항상 스스로의 판단으로 해주세요.
+        </p>
+
+        <div class="btn-area">
+          <button class="btn-primary" id="drawButton">오늘의 카드 뽑기</button>
+          <button class="btn-secondary" id="resetButton">오늘 기록 초기화</button>
+        </div>
+        <div class="btn-area">
+          <button class="btn-ghost" id="shareButton">오늘 운세 공유하기</button>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <span>3장 스프레드</span>
+          <span class="badge">과거 · 현재 · 미래</span>
+        </div>
+
+        <div class="spread-cards">
+          <div class="spread-card-wrapper">
+            <div class="spread-card-label">과거</div>
+            <div class="spread-card" id="spreadPast">
+              <div class="spread-card-name">카드를 뽑아보세요</div>
+              <div class="spread-card-orientation"></div>
+              <div class="spread-card-keyword"></div>
+            </div>
+          </div>
+          <div class="spread-card-wrapper">
+            <div class="spread-card-label">현재</div>
+            <div class="spread-card" id="spreadPresent">
+              <div class="spread-card-name">카드를 뽑아보세요</div>
+              <div class="spread-card-orientation"></div>
+              <div class="spread-card-keyword"></div>
+            </div>
+          </div>
+          <div class="spread-card-wrapper">
+            <div class="spread-card-label">미래</div>
+            <div class="spread-card" id="spreadFuture">
+              <div class="spread-card-name">카드를 뽑아보세요</div>
+              <div class="spread-card-orientation"></div>
+              <div class="spread-card-keyword"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spread-meaning" id="spreadMeaning">
+          3장 스프레드는 과거–현재–미래 흐름을 한 번에 보는 방식입니다.  
+          아래 버튼을 눌러 카드를 뽑아보세요.
+        </div>
+
+        <div class="btn-area" style="margin-top: 10px;">
+          <button class="btn-primary" id="drawSpreadButton">3장 뽑기</button>
+        </div>
+
+        <p class="hint">
+          ※ 3장 스프레드는 버튼을 누를 때마다 새롭게 뽑힙니다.
+        </p>
+      </section>
+
+      <div class="footer">
+        오늘 한 장 카드는 같은 기기·브라우저에서 하루에 한 번 같은 카드가 유지됩니다.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const TAROT_CARDS = [
+      {
+        name: "0. 광대 (The Fool)",
+        keyword: "새로운 시작 · 순수한 도전",
+        upright: {
+          advice: "마음이 끌리는 방향으로 가볍게 한 발 내딛어 보세요.",
+          overall: "새로운 시작, 여행, 모험에 좋은 날입니다. 결과보다는 과정에 집중해 보세요.",
+          love: "가벼운 만남, 설레는 인연이 다가올 수 있어요. 너무 계산적으로 행동하지 마세요.",
+          work: "새로운 아이디어나 프로젝트에 도전하기 좋은 시기입니다. 다만 기본은 꼭 챙기세요."
+        },
+        reversed: {
+          advice: "충동적 선택은 잠시 미루고, 한 번 더 점검해 보세요.",
+          overall: "무계획한 행동이나 실수가 생기기 쉬운 날입니다. 서두르지 않는 것이 중요합니다.",
+          love: "감정적으로 튀는 행동을 조심하세요. 상대를 충분히 배려하는 태도가 필요합니다.",
+          work: "정보 부족, 준비 부족으로 실수가 생길 수 있어요. 다시 한 번 계획을 점검하세요."
+        }
+      },
+      {
+        name: "1. 마법사 (The Magician)",
+        keyword: "능력 발휘 · 기회 포착",
+        upright: {
+          advice: "지금 가진 능력과 자원을 믿고 한 번 밀어붙여 보세요.",
+          overall: "집중력과 표현력이 높아지는 날입니다. 원하는 것을 말과 행동으로 분명히 드러내 보세요.",
+          love: "매력과 말빨이 잘 통하는 날이에요. 솔직한 표현이 좋은 결과를 부를 수 있습니다.",
+          work: "프레젠테이션, 협상, 계약에 유리한 흐름입니다. 스스로의 실력을 보여주세요."
+        },
+        reversed: {
+          advice: "말보다 행동, 과장보다 진실함이 더 필요한 날입니다.",
+          overall: "겉과 속이 다른 제안이나 사람을 조심해야 합니다. 너무 달콤한 말은 한 번 더 확인하세요.",
+          love: "말만 앞서는 관계, 밀당이 심한 관계라면 피로감이 쌓일 수 있어요.",
+          work: "실력 이상으로 포장하려다 들통날 수 있습니다. 할 수 있는 범위를 솔직하게 말하세요."
+        }
+      },
+      {
+        name: "2. 여사제 (The High Priestess)",
+        keyword: "직관 · 침착함",
+        upright: {
+          advice: "당장 답을 내리려 하기보다, 조용히 스스로의 마음을 관찰해보세요.",
+          overall: "겉으로 드러나지 않은 정보와 진실을 읽어내기 좋은 날입니다.",
+          love: "말보다는 눈빛과 분위기로 많은 것을 느낄 수 있어요. 섣불리 단정 짓지 마세요.",
+          work: "데이터 분석, 공부, 조용한 준비에 좋습니다. 보여주기보다 실력을 쌓는 데 집중하세요."
+        },
+        reversed: {
+          advice: "혼자서만 끙끙 앓지 말고, 믿을 수 있는 사람과 감정을 나눠보세요.",
+          overall: "오해, 불신이 생기기 쉽습니다. 확실하지 않은 정보는 퍼뜨리지 마세요.",
+          love: "연락, 표현이 부족해 상대가 불안할 수 있어요. 마음을 조금 더 드러내 주세요.",
+          work: "감정적으로 예민해질 수 있는 날입니다. 중요한 결정은 하루 미루는 것도 방법입니다."
+        }
+      },
+      {
+        name: "3. 여황제 (The Empress)",
+        keyword: "풍요 · 안정 · 다정함",
+        upright: {
+          advice: "나와 주변을 아껴주고 돌보는 만큼, 풍요가 돌아올 거예요.",
+          overall: "휴식, 즐거움, 풍요를 느끼기 좋은 날입니다. 오늘만큼은 조금 여유를 허락해 주세요.",
+          love: "따뜻한 교감과 애정 표현에 좋은 흐름입니다. 집, 카페에서 편안한 시간을 보내보세요.",
+          work: "그동안의 노력에 대한 작은 보상이 올 수 있습니다. 인간관계도 부드럽게 흘러갑니다."
+        },
+        reversed: {
+          advice: "타인을 챙기느라 너무 지치지 않았는지 스스로에게 물어보세요.",
+          overall: "에너지 과소비, 감정 과투자가 우려됩니다. 자기 관리에 신경 쓰세요.",
+          love: "집착, 과한 기대가 관계를 무겁게 만들 수 있어요. 서로의 공간을 존중해 주세요.",
+          work: "게으름 또는 과한 무리 둘 다 조심해야 합니다. 균형 잡힌 페이스가 중요합니다."
+        }
+      },
+      {
+        name: "4. 황제 (The Emperor)",
+        keyword: "책임 · 리더십 · 구조",
+        upright: {
+          advice: "오늘만큼은 주도적으로 결정하고 책임지는 태도를 가져보세요.",
+          overall: "계획, 규칙, 원칙을 세우기에 좋은 날입니다. 현실적인 판단이 잘 작동합니다.",
+          love: "든든하지만 다소 딱딱한 분위기가 될 수 있습니다. 부드러운 말 한마디를 더해보세요.",
+          work: "리더십과 결단력이 요구되는 상황에서 빛을 발할 수 있습니다."
+        },
+        reversed: {
+          advice: "내 방식만 고집하지 말고, 주변 의견에도 귀를 기울여 보세요.",
+          overall: "권위적인 태도, 고집이 갈등을 만들 수 있습니다. 유연함이 필요한 날입니다.",
+          love: "감정 표현 부족, 일 중심적인 태도가 상대를 서운하게 만들 수 있어요.",
+          work: "너무 통제하려고 하면 오히려 효율이 떨어집니다. 맡길 것은 믿고 맡기세요."
+        }
+      },
+      {
+        name: "10. 운명의 수레바퀴 (Wheel of Fortune)",
+        keyword: "전환점 · 우연한 기회",
+        upright: {
+          advice: "흐름이 바뀌는 지점을 잘 캐치해 보세요. 작은 기회도 흘려보내지 마세요.",
+          overall: "예상 밖의 변화, 우연한 행운이 찾아올 수 있습니다. 유연하게 대응해 보세요.",
+          love: "우연한 만남, 관계의 전환점이 생길 수 있어요. 흐름을 믿어보는 것도 좋습니다.",
+          work: "프로젝트, 직장, 업무 흐름에 변화가 생길 수 있습니다. 변화에 올라타는 쪽이 유리합니다."
+        },
+        reversed: {
+          advice: "굳이 지금 억지로 밀어붙이기보다, 타이밍을 다시 보는 것도 괜찮아요.",
+          overall: "타이밍이 어긋나는 느낌이 들 수 있습니다. 다만 이 또한 지나가는 흐름입니다.",
+          love: "엇갈림, 타이밍 불일치가 있을 수 있어요. 조급함을 내려놓는 것이 필요합니다.",
+          work: "계획이 자꾸 꼬일 수 있으니, 백업 플랜을 준비해 두면 좋습니다."
+        }
+      },
+      {
+        name: "13. 죽음 (Death)",
+        keyword: "끝맺음 · 새출발",
+        upright: {
+          advice: "이미 끝난 것에 매달리기보다, 새로운 시작을 위한 정리를 해보세요.",
+          overall: "무언가가 마무리되거나, 정리의 필요성이 강해지는 날입니다.",
+          love: "낡은 패턴을 끊어낼 때입니다. 관계 방식에 변화를 줄 필요가 있습니다.",
+          work: "정리, 구조조정, 방향 전환이 이뤄질 수 있습니다. 새 출발을 위한 단계로 보세요."
+        },
+        reversed: {
+          advice: "변화를 두려워해도 시간은 흐릅니다. 작은 것부터 조금씩 정리해 보세요.",
+          overall: "끝나야 할 것이 질질 끌릴 수 있습니다. 미뤄둔 일들을 하나씩 정리해 보세요.",
+          love: "과거 미련, 정리되지 않은 감정이 발목을 잡을 수 있습니다.",
+          work: "더 이상 도움이 되지 않는 방식이나 일을 붙잡고 있는지 돌아볼 필요가 있습니다."
+        }
+      },
+      {
+        name: "17. 별 (The Star)",
+        keyword: "희망 · 영감 · 치유",
+        upright: {
+          advice: "조금 느리더라도, 잘 가고 있다는 믿음을 가져보세요.",
+          overall: "마음이 한결 가벼워지고, 희망을 느낄 수 있는 날입니다.",
+          love: "따뜻하고 편안한 교감이 가능한 날입니다. 진솔한 대화가 관계를 더 가깝게 만듭니다.",
+          work: "장기적인 목표, 비전을 다시 세우기 좋습니다. 영감이 떠오르기 쉬운 날입니다."
+        },
+        reversed: {
+          advice: "지금 느끼는 불안도 영원하지 않다는 걸 기억해 주세요.",
+          overall: "실망, 무력감을 느낄 수 있지만, 작은 희망의 불씨는 여전히 남아 있습니다.",
+          love: "기대와 현실의 차이 때문에 실망할 수 있어요. 상대에게 너무 많은 걸 기대하지 마세요.",
+          work: "목표가 흐릿하게 느껴질 수 있습니다. 잠시 속도를 늦추고 방향부터 재정비하세요."
+        }
+      },
+      {
+        name: "19. 태양 (The Sun)",
+        keyword: "성공 · 기쁨 · 자신감",
+        upright: {
+          advice: "당당하게 자신을 드러내 보세요. 오늘의 주인공은 바로 당신입니다.",
+          overall: "에너지와 자신감이 넘치는 날입니다. 중요한 일을 추진해도 좋습니다.",
+          love: "즐거운 데이트, 밝은 대화가 잘 어울리는 하루입니다.",
+          work: "성과를 인정받거나, 좋은 평가를 받을 수 있는 운입니다. 자신감 있게 나아가세요."
+        },
+        reversed: {
+          advice: "너무 완벽하려 하지 말고, 지금의 작은 행복부터 찾아보세요.",
+          overall: "기대한 만큼의 성과가 나오지 않아도, 전체 흐름은 나쁘지 않습니다.",
+          love: "사소한 오해로 분위기가 흐려질 수 있어요. 먼저 밝게 분위기를 풀어보세요.",
+          work: "과신, 자만을 조심해야 합니다. 잘하고 있더라도 항상 기본을 점검하세요."
+        }
+      },
+      {
+        name: "21. 세계 (The World)",
+        keyword: "완성 · 성취 · 마무리",
+        upright: {
+          advice: "지금까지 잘 걸어온 나에게 칭찬을 건네 주세요.",
+          overall: "어느 하나의 흐름이 잘 마무리되거나, 성취감을 느끼기 좋은 날입니다.",
+          love: "관계가 한 단계 성숙해지거나, 중요한 결심을 할 수 있는 시점입니다.",
+          work: "프로젝트 완수, 목표 달성의 기운이 강합니다. 끝까지 마무리에 힘을 주세요."
+        },
+        reversed: {
+          advice: "마지막 1%를 채우기 위한 집중이 필요합니다. 조금만 더 힘을 내보세요.",
+          overall: "거의 다 왔지만, 어딘가 마무리가 애매하게 느껴질 수 있습니다.",
+          love: "관계의 다음 단계로 나아가는 데 주저함이 있을 수 있어요. 솔직한 대화가 필요합니다.",
+          work: "마감, 제출, 보고 등 마지막 정리가 중요합니다. 디테일을 다시 점검해 보세요."
+        }
+      }
+    ];
+
+    const drawButton = document.getElementById("drawButton");
+    const resetButton = document.getElementById("resetButton");
+    const shareButton = document.getElementById("shareButton");
+    const tarotCard = document.getElementById("tarotCard");
+
+    const todayText = document.getElementById("todayText");
+    const cardName = document.getElementById("cardName");
+    const cardOrientation = document.getElementById("cardOrientation");
+    const cardKeyword = document.getElementById("cardKeyword");
+    const cardTag = document.getElementById("cardTag");
+
+    const adviceText = document.getElementById("adviceText");
+    const overallText = document.getElementById("overallText");
+    const loveText = document.getElementById("loveText");
+    const workText = document.getElementById("workText");
+
+    const spreadPast = document.getElementById("spreadPast");
+    const spreadPresent = document.getElementById("spreadPresent");
+    const spreadFuture = document.getElementById("spreadFuture");
+    const spreadMeaning = document.getElementById("spreadMeaning");
+    const drawSpreadButton = document.getElementById("drawSpreadButton");
+
+    function getTodayKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatKoreanDate() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const d = now.getDate();
+      const weekdayNames = ["일", "월", "화", "수", "목", "금", "토"];
+      const w = weekdayNames[now.getDay()];
+      return `${y}년 ${m}월 ${d}일 (${w})`;
+    }
+
+    function saveTodayResult(data) {
+      const key = getTodayKey();
+      localStorage.setItem("tarot_today_date", key);
+      localStorage.setItem("tarot_today_data", JSON.stringify(data));
+    }
+
+    function loadTodayResult() {
+      const key = getTodayKey();
+      const savedDate = localStorage.getItem("tarot_today_date");
+      const savedData = localStorage.getItem("tarot_today_data");
+
+      if (!savedDate || !savedData) return null;
+      if (savedDate !== key) return null;
+
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function clearTodayResult() {
+      localStorage.removeItem("tarot_today_date");
+      localStorage.removeItem("tarot_today_data");
+    }
+
+    function updateUIWithResult(result, animate = false) {
+      const { cardIndex, isReversed } = result;
+      const card = TAROT_CARDS[cardIndex];
+      const data = isReversed ? card.reversed : card.upright;
+
+      if (animate) {
+        tarotCard.classList.add("flipped");
+        setTimeout(() => {
+          tarotCard.classList.remove("flipped");
+        }, 450);
+      }
+
+      tarotCard.style.background = "linear-gradient(145deg, #1d2340, #3949ab)";
+
+      cardName.textContent = card.name;
+      cardOrientation.textContent = isReversed ? "역방향 (Reversed)" : "정방향 (Upright)";
+      cardKeyword.textContent = `키워드: ${card.keyword}`;
+      cardTag.textContent = isReversed ? "조심 & 정리의 날" : "기회 & 성장의 날";
+
+      adviceText.textContent = data.advice;
+      overallText.textContent = data.overall;
+      loveText.textContent = data.love;
+      workText.textContent = data.work;
+    }
+
+    function drawTodayCard() {
+      let existing = loadTodayResult();
+      if (existing) {
+        updateUIWithResult(existing, true);
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * TAROT_CARDS.length);
+      const isReversed = Math.random() < 0.5;
+
+      const result = {
+        cardIndex: randomIndex,
+        isReversed
+      };
+
+      saveTodayResult(result);
+      updateUIWithResult(result, true);
+    }
+
+    function resetToday() {
+      clearTodayResult();
+      tarotCard.style.background =
+        "radial-gradient(circle at top, #2c2f5e, #0c0f24)";
+      cardName.textContent = "아직 카드를 뽑지 않았어요";
+      cardOrientation.textContent = "버튼을 눌러 오늘의 카드를 뽑아보세요.";
+      cardKeyword.textContent = "";
+      cardTag.textContent = "가볍게 즐기는 운세";
+
+      adviceText.textContent = "카드를 뽑아서 오늘의 메시지를 받아보세요.";
+      overallText.textContent = "오늘의 카드가 정해지면 전반적인 흐름을 알려드립니다.";
+      loveText.textContent = "인간관계, 연애, 가족, 동료와의 관계 흐름을 체크해보세요.";
+      workText.textContent = "일, 금전, 계획과 관련된 메시지를 확인할 수 있습니다.";
+    }
+
+    function drawThreeCardSpread() {
+      const indices = [];
+      while (indices.length < 3) {
+        const idx = Math.floor(Math.random() * TAROT_CARDS.length);
+        if (!indices.includes(idx)) indices.push(idx);
+      }
+
+      const cards = indices.map(index => ({
+        cardIndex: index,
+        isReversed: Math.random() < 0.5
+      }));
+
+      [spreadPast, spreadPresent, spreadFuture].forEach(cardEl => {
+        cardEl.classList.add("flipped");
+        setTimeout(() => cardEl.classList.remove("flipped"), 300);
+      });
+
+      const positions = [
+        { el: spreadPast, label: "과거의 영향" },
+        { el: spreadPresent, label: "현재의 상황" },
+        { el: spreadFuture, label: "다가오는 흐름" }
+      ];
+
+      positions.forEach((pos, i) => {
+        const el = pos.el;
+        const data = cards[i];
+        const card = TAROT_CARDS[data.cardIndex];
+
+        el.querySelector(".spread-card-name").textContent = card.name;
+        el.querySelector(".spread-card-orientation").textContent =
+          (data.isReversed ? "역방향" : "정방향") + " · " + pos.label;
+        el.querySelector(".spread-card-keyword").textContent = `키워드: ${card.keyword}`;
+      });
+
+      const pastCard = TAROT_CARDS[cards[0].cardIndex];
+      const presentCard = TAROT_CARDS[cards[1].cardIndex];
+      const futureCard = TAROT_CARDS[cards[2].cardIndex];
+
+      spreadMeaning.textContent =
+        `과거에는 「${pastCard.keyword}」의 기운이 현재에 영향을 주고 있고, ` +
+        `지금은 「${presentCard.keyword}」의 흐름 속에 있으며, ` +
+        `앞으로는 「${futureCard.keyword}」 방향으로 전개될 가능성이 높다는 메시지입니다. ` +
+        `각 카드의 키워드를 곰곰이 떠올리면서 오늘의 상황과 연결해 보세요.`;
+    }
+
+    function buildTodayShareText() {
+      const date = todayText.textContent || getTodayKey();
+      const name = cardName.textContent;
+      const orientation = cardOrientation.textContent;
+      const keyword = cardKeyword.textContent;
+      const advice = adviceText.textContent;
+
+      if (!name || name.includes("아직 카드를 뽑지")) return null;
+
+      return (
+        `[타로 오늘의 운세]\n` +
+        `${date}\n\n` +
+        `카드: ${name} (${orientation})\n` +
+        `${keyword}\n\n` +
+        `한 줄 조언: ${advice}\n\n` +
+        `※ 엔터테인먼트용 타로입니다.`
+      );
+    }
+
+    async function shareTodayFortune() {
+      const text = buildTodayShareText();
+      if (!text) {
+        alert("먼저 오늘의 카드를 뽑아주세요!");
+        return;
+      }
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "오늘의 타로 운세", text });
+        } catch (e) {}
+      } else if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(text);
+          alert("오늘의 운세를 클립보드에 복사했습니다. 원하는 곳에 붙여넣기 하세요!");
+        } catch (e) {
+          alert("공유 기능을 사용할 수 없어요. 대신 직접 복사해서 사용해 주세요.");
+        }
+      } else {
+        alert("공유 기능을 사용할 수 없어요. 대신 직접 복사해서 사용해 주세요.\n\n" + text);
+      }
+    }
+
+    function registerServiceWorker() {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      }
+    }
+
+    function init() {
+      todayText.textContent = formatKoreanDate();
+
+      const saved = loadTodayResult();
+      if (saved) updateUIWithResult(saved, false);
+
+      drawButton.addEventListener("click", drawTodayCard);
+      resetButton.addEventListener("click", () => {
+        if (confirm("오늘의 기록을 지우고 다시 뽑을 수 있게 할까요?")) resetToday();
+      });
+
+      drawSpreadButton.addEventListener("click", drawThreeCardSpread);
+      shareButton.addEventListener("click", shareTodayFortune);
+
+      registerServiceWorker();
+    }
+
+    init();
+  </script>
+</body>
+</html>
